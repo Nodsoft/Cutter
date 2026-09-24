@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/Solution Files/">
+    <File Path=".gitignore" />
+    <File Path="LICENSE.md" />
+    <File Path="setup_db.ps1" />
+  </Folder>
+  <Project Path="Nodsoft.Cutter.AppHost/Nodsoft.Cutter.AppHost.csproj" />
+  <Project Path="Nodsoft.Cutter.Server/Nodsoft.Cutter.Server.csproj" />
+  <Project Path="Nodsoft.Cutter.ServiceDefaults/Nodsoft.Cutter.ServiceDefaults.csproj" />
+</Solution>

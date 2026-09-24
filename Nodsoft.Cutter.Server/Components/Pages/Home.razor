@@ -1,0 +1,126 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using Nodsoft.Cutter.Server.Infrastructure.Blazor
+@using Nodsoft.Cutter.Server.Infrastructure.Validation
+
+@inject LinksService LinksService
+
+<PageTitle>Home</PageTitle>
+
+<div class="container-lg text-center">
+    <div class="mb-5">
+        <h1>NSYS Cutter</h1>
+        <p class="lead">A simple URL Shortener service.</p>
+    </div>
+    
+    <AuthorizeView Context="authCtx">
+        <Authorized>
+            <div class="row justify-content-center">
+                @* Two boxes, one for the link, the other for the shortened string *@
+                <EditForm EditContext="@_editCtx" FormName="CutterForm" class="col-md-6" OnSubmit="OnSubmitAsync">
+                    <DataAnnotationsValidator />
+                    <CustomValidation @ref="@_customValidation" />
+                    
+                    <div class="text-start mb-3">
+                        <div class="d-flex form-label justify-content-between">
+                            <label>Redirect Link</label>
+                            
+                            <small class="d-inline-flex">
+                                <ValidationMessage For="@(() => Model.Link)"/>
+                            </small>
+                        </div>
+                        
+                        <InputText @bind-Value="Model.Link" class="form-control" placeholder="https://example.com"/>
+                    </div>
+
+                    <div class="text-start mb-3">
+                        <div class="d-flex form-label justify-content-between">
+                            <label>Shortname</label>
+                            
+                            <small class="d-inline-flex">
+                                <ValidationMessage For="@(() => Model.ShortenedId)" />
+                                <span class="text-muted d-inline ms-2">(Optional)</span>
+                            </small>
+                        </div>
+                        
+                        <InputText @bind-Value="@Model.ShortenedId" class="form-control" placeholder="example"/>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between text-start my-5">
+                        <div>
+                            <button type="submit" class="btn btn-lg btn-primary px-5">Shorten</button>
+                        </div>
+                        
+                        <ValidationSummary />
+                    </div>
+                </EditForm>
+            </div>
+            
+            @if (_created is not null)
+            {
+                Uri redirect = LinksService.GetLinkUri(_created);
+                
+                <div class="fs-4 text-success card p-5 border-success" role="alert">
+                    <p>Your shortened link :</p>
+                    <a href="@redirect.AbsoluteUri" target="_blank">@redirect.ToString()[redirect.GetLeftPart(UriPartial.Scheme).Length..]</a>
+                </div>
+            }
+        </Authorized>
+        
+        <NotAuthorized>
+            <div class="alert alert-info" role="alert">
+                <p class="my-0">Please first <a href="/challenge">Login with GitHub</a> to shorten your links.</p>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code
+{
+    [SupplyParameterFromForm(FormName = "CutterForm")]
+    public CutterFormModel Model { get; set; } = new();
+
+    private EditContext _editCtx = null!;
+    private CustomValidation _customValidation = new();
+    
+    private Link? _created;
+
+    protected override void OnInitialized()
+    {
+        _editCtx = new(Model);
+        _editCtx.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
+    }
+
+    public class CutterFormModel
+    {
+        [Required, Url] 
+        public string Link { get; set; } = "";
+        
+        [OptionalLength(minimumLength: 3, maximumLength: 64, ErrorMessage = "Custom shortnames must be between 3 and 64 characters.")]
+        public string? ShortenedId { get; set; }
+    }
+
+    private async Task OnSubmitAsync(EditContext ctx)
+    {
+        if (!ctx.Validate())
+        {
+            return;
+        }
+        
+        _customValidation.ClearErrors();
+
+        try
+        {
+            _created = await LinksService.InsertLinkAsync(Model.ShortenedId, Model.Link);
+        }
+        catch (Exception e)
+        {
+            Dictionary<string, List<string>> errors = [];
+            errors.Add("", [e.Message]);
+
+            _customValidation.DisplayErrors(errors);
+        }
+    }
+}
