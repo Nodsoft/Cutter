@@ -12,23 +12,11 @@ using Nodsoft.Cutter.Server.Infrastructure.Configuration;
 using Nodsoft.Cutter.Server.Services;
 using OpenIddict.Validation.AspNetCore;
 using Serilog;
-using Serilog.Events;
-
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-    .Enrich.FromLogContext()
-    .WriteTo.Console(applyThemeToRedirectedOutput: true)
-    .CreateBootstrapLogger();
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-// Logging
-builder.Services.AddSerilog(static (services, lc) => lc
-    .ReadFrom.Configuration(services.GetRequiredService<IConfiguration>())
-    .ReadFrom.Services(services)
-);
+builder.AddServiceDefaults();
 
 // API
 builder.Services.AddControllers()
@@ -156,12 +144,15 @@ app.MapDefaultControllerRoute();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+app.MapDefaultEndpoints();
+
 await app.StartAsync();
 
 await using (AsyncServiceScope scope = app.Services.CreateAsyncScope())
 {
     // Migrate the database
-    await scope.ServiceProvider.GetRequiredService<CutterDbContext>().Database.MigrateAsync();
+    await using var dbContext = scope.ServiceProvider.GetRequiredService<CutterDbContext>();
+    await dbContext.Database.MigrateAsync(app.Lifetime.ApplicationStopping);
 }
 
 await app.WaitForShutdownAsync();

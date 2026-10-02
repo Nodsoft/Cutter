@@ -10,7 +10,6 @@ using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
 
 
 #pragma warning disable IDE0130
@@ -86,8 +85,6 @@ public static class Extensions
 				.Enrich.WithThreadId()
 				.Enrich.WithClientIp()
 				.Enrich.WithDemystifiedStackTraces()
-				// .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-				.WriteTo.Console(theme: ConsoleTheme.None) // Temp fix for broken serilog
 				.WriteTo.OpenTelemetry(options =>
 				{
 					options.Endpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
