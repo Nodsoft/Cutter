@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text.Json;
@@ -56,10 +56,12 @@ namespace Nodsoft.Cutter.Server.Migrations
                     table.PrimaryKey("pk_users", x => x.id);
                 });
 
-            migrationBuilder.InsertData(
-                table: "users",
-                columns: new[] { "id", "created_at", "updated_at", "ip_addresses", "is_blocked", "raw_object", "username" },
-                values: new object[] { 1L, new DateTimeOffset(new DateTime(2000, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), new DateTimeOffset(new DateTime(2000, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), new List<IPAddress>(), false, System.Text.Json.JsonDocument.Parse("{\"legacy\": true}", new System.Text.Json.JsonDocumentOptions()), "__legacy" });
+            // Seed before adding the foreign key so existing links retain their owner.
+            migrationBuilder.Sql("""
+                INSERT INTO users (id, created_at, updated_at, ip_addresses, is_blocked, raw_object, username)
+                VALUES (1, TIMESTAMPTZ '2000-01-01 00:00:00+00', TIMESTAMPTZ '2000-01-01 00:00:00+00',
+                        ARRAY[]::inet[], FALSE, '{"legacy": true}'::jsonb, '__legacy');
+                """);
 
             migrationBuilder.CreateIndex(
                 name: "ix_links_created_by_id",

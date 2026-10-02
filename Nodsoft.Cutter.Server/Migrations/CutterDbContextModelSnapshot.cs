@@ -20,7 +20,7 @@ namespace Nodsoft.Cutter.Server.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.4")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -102,14 +102,6 @@ namespace Nodsoft.Cutter.Server.Migrations
                         .HasName("pk_role");
 
                     b.ToTable("role", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1L,
-                            Description = "Platform administrator, has full access to all management features.",
-                            Name = "admin"
-                        });
                 });
 
             modelBuilder.Entity("Nodsoft.Cutter.Server.Data.Models.User", b =>
@@ -124,7 +116,7 @@ namespace Nodsoft.Cutter.Server.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<List<IPAddress>>("IpAddresses")
+                    b.PrimitiveCollection<List<IPAddress>>("IpAddresses")
                         .IsRequired()
                         .HasColumnType("inet[]")
                         .HasColumnName("ip_addresses");
@@ -158,18 +150,6 @@ namespace Nodsoft.Cutter.Server.Migrations
                         .HasDatabaseName("ix_users_username");
 
                     b.ToTable("users", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1L,
-                            CreatedAt = new DateTimeOffset(new DateTime(2000, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            IpAddresses = new List<IPAddress>(),
-                            IsBlocked = false,
-                            RawObject = System.Text.Json.JsonDocument.Parse("{\"legacy\": true}", new System.Text.Json.JsonDocumentOptions()),
-                            UpdatedAt = new DateTimeOffset(new DateTime(2000, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Username = "__legacy"
-                        });
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication<System.Guid>", b =>
@@ -417,8 +397,8 @@ namespace Nodsoft.Cutter.Server.Migrations
                         .HasColumnName("subject");
 
                     b.Property<string>("Type")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("type");
 
                     b.HasKey("Id")

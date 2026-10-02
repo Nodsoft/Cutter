@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -52,10 +52,10 @@ namespace Nodsoft.Cutter.Server.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "role",
-                columns: new[] { "id", "description", "name" },
-                values: new object[] { 1L, "Platform administrator, has full access to all management features.", "admin" });
+            migrationBuilder.Sql("""
+                INSERT INTO role (id, description, name)
+                VALUES (1, 'Platform administrator, has full access to all management features.', 'admin');
+                """);
 
             migrationBuilder.UpdateData(
                 table: "users",
