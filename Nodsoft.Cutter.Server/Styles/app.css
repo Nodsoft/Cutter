@@ -1,0 +1,4 @@
+@import "tailwindcss" source(none);
+
+/* Paths are relative to this stylesheet. Includes Razor and C# code-behind. */
+@source "../Components";

@@ -1,0 +1,39 @@
+<Project>
+    <PropertyGroup>
+        <NpmExecutable Condition="'$(NpmExecutable)' == ''">npm</NpmExecutable>
+        <TailwindBuildArguments Condition="'$(Configuration)' == 'Release'">-- --minify</TailwindBuildArguments>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Build inputs are not needed by the published server. -->
+        <Content Remove="package.json;package-lock.json;Styles\**;build\**;**\*.scss;wwwroot\lib\bootstrap\**" />
+        <None Remove="package.json;package-lock.json;Styles\**;build\**;**\*.scss" />
+        <None Include="package.json;package-lock.json;Styles\**;build\**;**\*.scss" />
+    </ItemGroup>
+
+    <Target Name="RestoreTailwind"
+            Condition="'$(DesignTimeBuild)' != 'true'"
+            Inputs="$(MSBuildProjectDirectory)/package.json;$(MSBuildProjectDirectory)/package-lock.json"
+            Outputs="$(MSBuildProjectDirectory)/node_modules/.package-lock.json;$(MSBuildProjectDirectory)/node_modules/@tailwindcss/cli/dist/index.mjs">
+        <Exec Command="&quot;$(NpmExecutable)&quot; ci --include=dev --include=optional --no-audit --no-fund"
+              WorkingDirectory="$(MSBuildProjectDirectory)" />
+    </Target>
+
+    <!-- Generate and register the CSS before the SDK discovers static web assets.
+         Explicit registration also includes it on the first build of a clean checkout. -->
+    <Target Name="BuildTailwind"
+            BeforeTargets="ResolveProjectStaticWebAssets"
+            DependsOnTargets="RestoreTailwind"
+            Condition="'$(DesignTimeBuild)' != 'true' and '$(NoBuild)' != 'true'">
+        <Delete Files="$(MSBuildProjectDirectory)/wwwroot/css/app.css" />
+        <Exec Command="&quot;$(NpmExecutable)&quot; run build:css $(TailwindBuildArguments)"
+              WorkingDirectory="$(MSBuildProjectDirectory)" />
+        <Error Condition="!Exists('$(MSBuildProjectDirectory)/wwwroot/css/app.css')"
+               Text="Tailwind did not generate wwwroot/css/app.css. Ensure Node.js 22+ and npm are active on PATH, or set NpmExecutable to your npm launcher." />
+        <ItemGroup>
+            <Content Remove="wwwroot\css\app.css" />
+            <Content Include="wwwroot\css\app.css" CopyToPublishDirectory="PreserveNewest" />
+            <FileWrites Include="$(MSBuildProjectDirectory)/wwwroot/css/app.css" />
+        </ItemGroup>
+    </Target>
+</Project>
